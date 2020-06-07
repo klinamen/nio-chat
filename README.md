@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/klinamen/nio-chat/branch/master/graph/badge.svg)](https://codecov.io/gh/klinamen/nio-chat)
 
 # Introduction
-This is an example of how Java non-blocking IO API (java.nio) can be used to build a basic chat server. Once running, it will bind to all the available interfaces and listen for connections on 10000 TCP port.
+This is an example of how Java non-blocking IO API (java.nio) can be used to build a basic chat server. Once running, it will bind to all the available interfaces and listen for connections on the TCP port 10000.
 
 You can join the chat room with a Telnet client as follows.
 
