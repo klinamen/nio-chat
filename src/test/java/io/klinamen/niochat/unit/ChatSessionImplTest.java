@@ -87,7 +87,7 @@ public class ChatSessionImplTest {
     }
 
     @Test
-    public void test_partial_writes() throws IOException {
+    public void should_receive_all_when_partial_flushes() throws IOException {
         byte[] sentData = Utils.buildFilledArray(MockReadChannel.FILL_VALUE, ChatSessionImpl.BUFFER_SIZE);
 
         ByteBuffer buffer = ByteBuffer.allocate(ChatSessionImpl.BUFFER_SIZE);
@@ -101,13 +101,18 @@ public class ChatSessionImplTest {
         final int writeCycles = 4;
         MockWriteChannel outChannel = new MockWriteChannel(ChatSessionImpl.BUFFER_SIZE / writeCycles);
 
+        byte[] receivedData = new byte[sentData.length];
+
         for (int i = 0; i < writeCycles; i++) {
             int written = session.write(outChannel);
             Assert.assertEquals(sentData.length / writeCycles, written);
+            System.arraycopy(outChannel.getLastWritten(), 0, receivedData, i * (ChatSessionImpl.BUFFER_SIZE / writeCycles), written);
         }
 
         int written = session.write(outChannel);
         Assert.assertEquals(0, written);
+
+        Assert.assertArrayEquals(sentData, receivedData);
     }
 }
 

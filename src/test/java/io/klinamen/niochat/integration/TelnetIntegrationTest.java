@@ -1,6 +1,8 @@
 package io.klinamen.niochat.integration;
 
 import io.klinamen.niochat.ChatServer;
+import io.klinamen.niochat.ChatSessionImpl;
+import io.klinamen.niochat.Utils;
 import org.apache.commons.net.telnet.TelnetClient;
 import org.junit.After;
 import org.junit.Assert;
@@ -8,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +36,8 @@ public class TelnetIntegrationTest {
         serverThread.join(2000);
     }
 
-    @Test()
-    public void should_broadcast_to_all() throws Exception {
+    @Test(timeout = 3000)
+    public void should_broadcast_to_all_when_a_message_is_sent() throws Exception {
         List<TelnetClient> recipients = new ArrayList<>();
         recipients.add(createConnectedClient());
         recipients.add(createConnectedClient());
@@ -48,13 +51,45 @@ public class TelnetIntegrationTest {
         // receive messages
         for (TelnetClient recipient : recipients) {
             byte[] received = new byte[sent.length];
-            recipient.getInputStream().read(received);
+            readUntilBufferIsFull(recipient.getInputStream(), received);
             recipient.disconnect();
 
             Assert.assertArrayEquals(sent, received);
         }
 
         sender.disconnect();
+    }
+
+    @Test(timeout = 3000)
+    public void should_broadcast_when_messages_are_greater_than_buffers() throws Exception {
+        List<TelnetClient> recipients = new ArrayList<>();
+        recipients.add(createConnectedClient());
+        recipients.add(createConnectedClient());
+
+        // send message
+        TelnetClient sender = createConnectedClient();
+
+        byte[] sent = Utils.buildFilledArray((byte) 'x', ChatSessionImpl.BUFFER_SIZE * 2);
+        sender.getOutputStream().write(sent);
+        sender.getOutputStream().flush();
+
+        // receive messages
+        for (TelnetClient recipient : recipients) {
+            byte[] received = new byte[sent.length];
+            readUntilBufferIsFull(recipient.getInputStream(), received);
+            recipient.disconnect();
+
+            Assert.assertArrayEquals(sent, received);
+        }
+
+        sender.disconnect();
+    }
+
+    private void readUntilBufferIsFull(InputStream iStream, byte[] buffer) throws IOException {
+        int i = 0;
+        while (i < buffer.length) {
+            buffer[i++] = (byte) iStream.read();
+        }
     }
 
     private TelnetClient createConnectedClient() throws IOException {
