@@ -43,8 +43,10 @@ public class ChatServer implements Runnable {
 
             selector = Selector.open();
             serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+
+            logger.info(String.format("Server ready to accept connections on %s.", serverSocket.socket()));
         } catch (IOException e) {
-            throw new RuntimeException(String.format("Error creating server socket: %s", e.getMessage()), e);
+            throw new RuntimeException(String.format("Error initializing server socket: %s", e.getMessage()), e);
         }
     }
 

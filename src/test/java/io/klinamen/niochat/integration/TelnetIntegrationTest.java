@@ -45,6 +45,7 @@ public class TelnetIntegrationTest {
         sender.getOutputStream().write(sent);
         sender.getOutputStream().flush();
 
+        // receive messages
         for (TelnetClient recipient : recipients) {
             byte[] received = new byte[sent.length];
             recipient.getInputStream().read(received);
