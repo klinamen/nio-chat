@@ -173,5 +173,6 @@ public class ChatServer implements Runnable {
 
     public void shutdown() {
         isClosing = true;
+        logger.info("Server is shutting down");
     }
 }
