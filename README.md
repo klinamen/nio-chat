@@ -3,12 +3,12 @@
 
 # Build
 
-'''
+```
 mvn build
-'''
+```
 
 # Run
 
-'''
+```
 java -jar target/nio-chat-server-1.0-SNAPSHOT.jar
-'''
+```
