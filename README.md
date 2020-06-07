@@ -4,7 +4,7 @@
 # Build
 
 ```
-mvn build
+mvn package
 ```
 
 # Run
