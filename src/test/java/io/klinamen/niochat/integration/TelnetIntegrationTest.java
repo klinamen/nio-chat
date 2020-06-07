@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TelnetIntegration {
+public class TelnetIntegrationTest {
     public static final String DEFAULT_BINDING_IF = "localhost";
     public static final int DEFAULT_PORT = 10000;
 
