@@ -7,15 +7,14 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class ChatServer implements Runnable {
     private static final Logger logger = Logger.getLogger(ChatServer.class.getName());
 
-    private final BufferedPipe pipe = new BufferedPipe(ChatSessionImpl.BUFFER_SIZE);
+    private final ChatRoom chatRoom = new ChatRoom(ChatSessionImpl.BUFFER_SIZE);
+
     private final String bindingHostname;
     private final int bindingPort;
 
@@ -90,7 +89,11 @@ public class ChatServer implements Runnable {
         try {
             SocketChannel clientChannel = serverSocket.accept();
             clientChannel.configureBlocking(false);
-            clientChannel.register(key.selector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE, new ChatSessionImpl());
+
+            ChatSession session = new ChatSessionImpl();
+            clientChannel.register(key.selector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE, session);
+            chatRoom.join(session);
+
             logger.info(String.format("Accepted connection from %s", clientChannel.getRemoteAddress().toString()));
         } catch (IOException e) {
             logger.severe(String.format("Error accepting connection: %s. Channel will be closed.", e.getMessage()));
@@ -115,19 +118,9 @@ public class ChatServer implements Runnable {
                 return;
             }
 
-            broadcast(srcClientSession, readKey);
+            // broadcast message to the room
+            chatRoom.broadcast(srcClientSession);
         });
-    }
-
-    private void broadcast(ChatSession source, SelectionKey sourceKey) {
-        List<ChatSession> broadcastRecipients = selector.keys().stream()
-                .filter(k -> k != sourceKey)
-                .map(this::getClient)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
-
-        pipe.multicast(source, broadcastRecipients);
     }
 
     private void write(SelectionKey key) {
@@ -163,6 +156,8 @@ public class ChatServer implements Runnable {
     private void cancel(SelectionKey key) {
         SocketChannel channel = (SocketChannel) key.channel();
         key.cancel();
+
+        getClient(key).ifPresent(chatRoom::leave);
 
         try {
             channel.close();
