@@ -1,1 +1,1 @@
-github/workflow/status/:user/:repo/:workflow
+![build](https://github.com/klinamen/nio-chat/workflows/build/badge.svg)
